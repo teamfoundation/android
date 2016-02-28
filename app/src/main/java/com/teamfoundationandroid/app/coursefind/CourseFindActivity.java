@@ -87,7 +87,6 @@ public class CourseFindActivity extends AppCompatActivity implements View.OnClic
 
         dialog = ProgressDialog.show(this, "Loading", "Hacking your school's bookstore...", true);
 
-
         final Spinner termSpinner = (Spinner) findViewById(R.id.main_activity_fragment_term_spinner);
         final ArrayAdapter<Term> termAdapter = new TermListAdapter(CourseFindActivity.this, android.R.layout.simple_spinner_item, new Term[0]);
         termAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
@@ -244,8 +243,8 @@ public class CourseFindActivity extends AppCompatActivity implements View.OnClic
                 params.add("langId",app_preferences.getString(PrefKeys.SCHOOL_LANG_ID,"-1"));
                 params.add("storeId",app_preferences.getString(PrefKeys.SCHOOL_STORE_ID,""));
                 params.add("catalogId",app_preferences.getString(PrefKeys.SCHOOL_CAT_ID,""));
-                params.add("termId",(((Term) termSpinner.getSelectedItem()).termId));
-                params.add("courseID",((Course) parent.getAdapter().getItem(position)).id);
+                params.add("termId",((Term) termSpinner.getSelectedItem()).termId);
+                params.add("courseId",((Course) parent.getAdapter().getItem(position)).id);
                 //campusId=63074026&
 
                 //curl -H 'Content-Length:0' -H 'User-Agent:' -X POST 'http://milton.bncollege.com/webapp/wcs/stores/servlet/TextBookProcessDropdownsCmd?termId=72257798&courseId=&sectionId=&storeId=82238&catalogId=10001&langId=-1&dropdown=term'
@@ -349,6 +348,80 @@ public class CourseFindActivity extends AppCompatActivity implements View.OnClic
             }}, 0, 500);
 
         //curl -H 'Content-Length:0' -H 'User-Agent:TeamFoundation' -X POST 'http://milton.bncollege.com/webapp/wcs/stores/servlet/TextBookProcessDropdownsCmd?campusId=63074026&termId=72257798&deptId=72257800&courseId=&sectionId=&storeId=82238&catalogId=10001&langId=-1&dropdown=dept'`
+
+
+        Button submitButton = (Button) findViewById(R.id.main_activity_fragment_find_books_button);
+        submitButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                //go pull the stuff from bncollege
+                final WebView view2 = new WebView(getApplicationContext());
+
+                view2.getSettings().setJavaScriptEnabled(true);
+                view2.getSettings().setUserAgentString("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2227.1 Safari/537.36");
+                view2.getSettings().setLoadsImagesAutomatically(true);
+                CookieManager.getInstance().setAcceptCookie(true);
+
+                view2.loadUrl(app_preferences.getString(PrefKeys.SCHOOL_BASE_URL,"") + "/webapp/wcs/stores/servlet/BNCBTBListView?" +
+                        "storeId=" + app_preferences.getString(PrefKeys.SCHOOL_STORE_ID,"") +
+                        "&catalogId=10001" + app_preferences.getString(PrefKeys.SCHOOL_CAT_ID,"") +
+                        "&langId=-1" + app_preferences.getString(PrefKeys.SCHOOL_LANG_ID,"") +
+                        "&section_2=" + ((Section) sectionSpinner.getSelectedItem()).id);
+                CookieManager.getInstance().setAcceptCookie(true);
+                CookieManager.getInstance().setAcceptThirdPartyCookies(view,true);
+                final Timer timer = new Timer();
+                timer.scheduleAtFixedRate(new TimerTask() {
+                    @Override
+                    public void run() {
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                view2.evaluateJavascript("(function() { " +
+                                        "var titles = document.getElementsByClassName(\"noImageDisReq\");\n" +
+                                        "var isbns = document.getElementsByClassName(\"book_desc1\")\n" +
+                                        "if(titles.length > 0) {\n" +
+                                        "    var answer = {};\n" +
+                                        "    for (var i=0; i < titles.length; i++) {\n" +
+                                        "        answer[titles[i].getAttribute(\"title\")] = isbns[i].getElementsByTagName(\"ul\")[0].getElementsByTagName(\"li\")[2].innerHTML\n" +
+                                        "    }\n" +
+                                        "return JSON.stringify(answer);" +
+                                        "}" +
+                                        "else { return \"nothing yet\";} })()", new ValueCallback<String>() {
+                                    @Override
+                                    public void onReceiveValue(String value) {
+
+                                        value = value.substring(1,value.length()-1);
+                                        value = value.replace("\\","");
+                                        Log.w("findbooks","oldvaue: " + value);
+                                /**/
+                                        if (!value.equals("nothing yet")) {
+                                            Log.w("findbooks","have data");
+                                            dialog.dismiss();
+                                            Log.w("findbooks","CAnceling timer");
+                                            timer.cancel();
+                                            try {
+                                                Intent tent = new Intent(CourseFindActivity.this,BookViewActivity.class);
+                                                tent.putExtra("bookJson",value);
+                                                startActivity(tent);
+                                                finish();
+
+                                            }
+                                            catch (Exception e) {
+                                                e.printStackTrace();
+                                            }
+
+                                        }
+                                    }
+                                });
+                            }
+                        });
+
+                    }}, 0, 500);
+
+            }
+        });
+
+        //http://milton.bncollege.com/webapp/wcs/stores/servlet/BNCBTBListView?storeId=82238&catalogId=10001&langId=-1&section_2=70205613
     }
 
     @Override
