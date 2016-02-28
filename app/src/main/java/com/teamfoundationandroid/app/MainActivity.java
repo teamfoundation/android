@@ -65,25 +65,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private Button signOutButton;
 
     /**
-     * Initializes the Toolbar for use with the activity.
-     */
-    private void setupToolbar(final Bundle savedInstanceState) {
-        toolbar = (Toolbar) findViewById(R.id.toolbar);
-        // Set up the activity to use this toolbar. As a side effect this sets the Toolbar's title
-        // to the activity's title.
-        //setSupportActionBar(toolbar);
-
-        if (savedInstanceState != null) {
-            // Some IDEs such as Android Studio complain about possible NPE without this check.
-            assert getSupportActionBar() != null;
-
-            // Restore the Toolbar's title.
-            getSupportActionBar().setTitle(
-                    savedInstanceState.getCharSequence(BUNDLE_KEY_TOOLBAR_TITLE));
-        }
-    }
-
-    /**
      * Initializes the sign-in and sign-out buttons.
      */
     private void setupSignInButtons() {
@@ -138,8 +119,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         identityManager = awsMobileClient.getIdentityManager();
 
         setContentView(R.layout.main_activity);
-
-        setupToolbar(savedInstanceState);
 
         setupNavigationMenu(savedInstanceState);
     }
