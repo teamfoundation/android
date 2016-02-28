@@ -24,7 +24,7 @@
         android:label="@string/app_name"
         android:theme="@style/AppTheme" >
         <activity
-            android:name=".MainActivity"
+            android:name=".coursefind.CourseFindActivity"
             android:label="@string/app_name" >
         </activity>
         <activity
@@ -128,16 +128,8 @@
 
         <!-- END - PUSH NOTIFICATIONS WITH GOOGLE CLOUD MESSAGING (GCM) -->
         <activity
-            android:name=".SelectSchoolActivity"
+            android:name=".schoolselect.SelectSchoolActivity"
             android:label="@string/title_activity_select_school" >
-        </activity>
-        <activity
-            android:name=".CourseFindActivity"
-            android:label="@string/title_activity_course_find"
-            android:parentActivityName=".MainActivity" >
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.teamfoundationandroid.app.MainActivity" />
         </activity>
     </application>
 

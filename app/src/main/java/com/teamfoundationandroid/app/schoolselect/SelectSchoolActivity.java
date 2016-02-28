@@ -1,5 +1,9 @@
-package com.teamfoundationandroid.app;
+package com.teamfoundationandroid.app.schoolselect;
 
+import android.app.ProgressDialog;
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.Editable;
@@ -12,6 +16,9 @@ import android.widget.ArrayAdapter;
 import com.loopj.android.http.AsyncHttpClient;
 import com.loopj.android.http.RequestParams;
 import com.loopj.android.http.TextHttpResponseHandler;
+import com.teamfoundationandroid.app.PrefKeys;
+import com.teamfoundationandroid.app.coursefind.CourseFindActivity;
+import com.teamfoundationandroid.app.R;
 import cz.msebera.android.httpclient.Header;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -21,11 +28,13 @@ import org.jsoup.select.Elements;
 public class SelectSchoolActivity extends AppCompatActivity {
     SchoolAutoCompleteView inputSchool;
 
+    School[] schools;
+
     // adapter for auto-complete
     ArrayAdapter<School> myAdapter;
 
     public interface SchoolCallback {
-        void processSchools(School[] schools);
+        void processSchools();
     }
 
     public void pullSchools(String hint, final SchoolCallback schoolCallback) {
@@ -44,7 +53,7 @@ public class SelectSchoolActivity extends AppCompatActivity {
 
                     Document doc = Jsoup.parse(responseString);
                     Elements schoolLinks = doc.select("a");
-                    School[] schools = new School[schoolLinks.size()];
+                    schools = new School[schoolLinks.size()];
                     for (int i = 0; i < schoolLinks.size(); i++) {
                         Element link = schoolLinks.get(i);
                         String baseURl = link.attr("href");
@@ -53,7 +62,7 @@ public class SelectSchoolActivity extends AppCompatActivity {
 
                     }
                     //add the schools
-                    schoolCallback.processSchools(schools);
+                    schoolCallback.processSchools();
                 }
             }
         });
@@ -70,7 +79,39 @@ public class SelectSchoolActivity extends AppCompatActivity {
         inputSchool.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                System.out.println("item clicked");
+                final School school = schools[position];
+                final ProgressDialog dialog = ProgressDialog.show(SelectSchoolActivity.this, "Loading", "Hacking your school's bookstore...", true);
+                AsyncHttpClient client = new AsyncHttpClient();
+                client.addHeader("User-Agent","TeamFoundation");
+                client.addHeader("Content-Length","0");
+                client.get(school.baseURL, new TextHttpResponseHandler() {
+                    @Override
+                    public void onFailure(int statusCode, Header[] headers, String responseString, Throwable throwable) {
+
+                    }
+
+                    @Override
+                    public void onSuccess(int statusCode, Header[] headers, String responseString) {
+                        Document doc = Jsoup.parse(responseString);
+                        SharedPreferences app_preferences = PreferenceManager.getDefaultSharedPreferences(SelectSchoolActivity.this);
+                        String storeId = doc.select("input#storeId").get(0).attr("value");
+                        String langID = doc.select("input#langId").get(0).attr("value");
+                        String catId = doc.select("input#catalogId").get(0).attr("value");
+
+                        app_preferences.edit()
+                                .putString(PrefKeys.SCHOOL_BASE_URL,school.baseURL)
+                                .putString(PrefKeys.SCHOOL_FRIENDLY_NAME,school.friendlyName)
+                                .putString(PrefKeys.SCHOOL_STORE_ID,doc.select("input#storeId").get(0).attr("value"))
+                                .putString(PrefKeys.SCHOOL_LANG_ID,doc.select("input#langId").get(0).attr("value"))
+                                .putString(PrefKeys.SCHOOL_CAT_ID,doc.select("input#catalogId").get(0).attr("value")).apply();
+                        Intent tent = new Intent(SelectSchoolActivity.this, CourseFindActivity.class);
+                        dialog.dismiss();
+                        startActivity(tent);
+                        finish();
+                    }
+                });
+
+
             }
         });
         inputSchool.addTextChangedListener(new TextWatcher() {
@@ -89,7 +130,7 @@ public class SelectSchoolActivity extends AppCompatActivity {
                 // get suggestions from the database
                 pullSchools(userInput.toString(), new SchoolCallback() {
                     @Override
-                    public void processSchools(School[] schools) {
+                    public void processSchools() {
                         if (myAdapter != null) {
                             myAdapter.notifyDataSetChanged();
                         }

@@ -1,4 +1,4 @@
-package com.teamfoundationandroid.app;
+package com.teamfoundationandroid.app.schoolselect;
 
 import android.content.Context;
 import android.util.AttributeSet;

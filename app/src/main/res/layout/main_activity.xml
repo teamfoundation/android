@@ -7,7 +7,7 @@
         tools:context="com.mysampleapp.MainActivity">
 
     <fragment
-            android:name="com.teamfoundationandroid.app.MainActivityFragment"
+            android:name="com.teamfoundationandroid.app.coursefind.CourseFindActivityFragment"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             tools:layout="@layout/main_fragment"/>

@@ -12,6 +12,7 @@ import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
 import com.google.android.gms.gcm.GcmListenerService;
+import com.teamfoundationandroid.app.coursefind.CourseFindActivity;
 
 import java.util.List;
 
@@ -60,7 +61,7 @@ public class PushListenerService extends GcmListenerService {
     }
 
     private void displayNotification(final String message) {
-        Intent notificationIntent = new Intent(this, MainActivity.class);
+        Intent notificationIntent = new Intent(this, CourseFindActivity.class);
         notificationIntent.setFlags(
                 Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
         int requestID = (int) System.currentTimeMillis();

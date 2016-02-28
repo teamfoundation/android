@@ -1,4 +1,4 @@
-package com.teamfoundationandroid.app;
+package com.teamfoundationandroid.app.schoolselect;
 
 /**
  * Created by Ravi on 2/28/16.
