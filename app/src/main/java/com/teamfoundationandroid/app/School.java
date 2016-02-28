@@ -5,10 +5,10 @@ package com.teamfoundationandroid.app;
  */
 public class School {
     public final String friendlyName;
-    public final String subdomain;
+    public final String baseURL;
 
-    public School(String friendlyName, String subdomain) {
+    public School(String friendlyName, String baseURL) {
         this.friendlyName = friendlyName;
-        this.subdomain = subdomain;
+        this.baseURL = baseURL;
     }
 }

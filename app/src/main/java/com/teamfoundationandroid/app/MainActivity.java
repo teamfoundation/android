@@ -28,9 +28,6 @@ import android.app.AlertDialog;
 import android.content.IntentFilter;
 import android.content.BroadcastReceiver;
 import android.support.v4.content.LocalBroadcastManager;
-import com.teamfoundationandroid.app.demo.DemoConfiguration;
-import com.teamfoundationandroid.app.demo.HomeDemoFragment;
-import com.teamfoundationandroid.app.demo.UserSettings;
 
 import java.util.List;
 
@@ -53,12 +50,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     /** The identity manager used to keep track of the current user account. */
     private IdentityManager identityManager;
 
-    /** The toolbar view control. */
-    private Toolbar toolbar;
-
-    /** Our navigation drawer class for handling navigation drawer logic. */
-    private NavigationDrawer navigationDrawer;
-
     /** The helper class used to toggle the left navigation drawer open and closed. */
     private ActionBarDrawerToggle drawerToggle;
 
@@ -69,39 +60,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
      */
     private void setupSignInButtons() {
 
-        signOutButton = (Button) findViewById(R.id.button_signout);
+        signOutButton = (Button) findViewById(R.id.action_sign_out);
         signOutButton.setOnClickListener(this);
 
-    }
-
-    /**
-     * Initializes the navigation drawer menu to allow toggling via the toolbar or swipe from the
-     * side of the screen.
-     */
-    private void setupNavigationMenu(final Bundle savedInstanceState) {
-        final DrawerLayout drawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
-        final ListView drawerItems = (ListView) findViewById(R.id.nav_drawer_items);
-
-        // Create the navigation drawer.
-        navigationDrawer = new NavigationDrawer(this, toolbar, drawerLayout, drawerItems,
-                R.id.main_fragment_container);
-
-        // Add navigation drawer menu items.
-        // Home isn't a demo, but is fake as a demo.
-        DemoConfiguration.DemoFeature home = new DemoConfiguration.DemoFeature();
-        home.iconResId = R.mipmap.icon_home;
-        home.titleResId = R.string.main_nav_menu_item_home;
-        navigationDrawer.addDemoFeatureToMenu(home);
-
-        for (DemoConfiguration.DemoFeature demoFeature : DemoConfiguration.getDemoFeatureList()) {
-            navigationDrawer.addDemoFeatureToMenu(demoFeature);
-        }
-        setupSignInButtons();
-
-        if (savedInstanceState == null) {
-            // Add the home fragment to be displayed initially.
-            navigationDrawer.showHome();
-        }
     }
 
     @Override
@@ -119,8 +80,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         identityManager = awsMobileClient.getIdentityManager();
 
         setContentView(R.layout.main_activity);
-
-        setupNavigationMenu(savedInstanceState);
     }
 
     @Override
@@ -141,9 +100,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         // register notification receiver
         LocalBroadcastManager.getInstance(this).registerReceiver(notificationReceiver,
                 new IntentFilter(com.teamfoundationandroid.app.PushListenerService.ACTION_SNS_NOTIFICATION));
-
-        updateColor();
-        syncUserSettings();
     }
 
     @Override
@@ -158,9 +114,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         super.onSaveInstanceState(bundle);
         // Save the title so it will be restored properly to match the view loaded when rotation
         // was changed or in case the activity was destroyed.
-        if (toolbar != null) {
-            bundle.putCharSequence(BUNDLE_KEY_TOOLBAR_TITLE, toolbar.getTitle());
-        }
     }
 
     @Override
@@ -201,71 +154,5 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         LocalBroadcastManager.getInstance(this).unregisterReceiver(notificationReceiver);
     }
 
-    @Override
-    public void onBackPressed() {
-        final FragmentManager fragmentManager = this.getSupportFragmentManager();
-        if (fragmentManager.findFragmentByTag(HomeDemoFragment.class.getSimpleName()) == null) {
-            final Class fragmentClass = HomeDemoFragment.class;
-            // if we aren't on the home fragment, navigate home.
-            final Fragment fragment = Fragment.instantiate(this, fragmentClass.getName());
 
-            fragmentManager
-                    .beginTransaction()
-                    .replace(R.id.main_fragment_container, fragment, fragmentClass.getSimpleName())
-                    .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
-                    .commit();
-
-            // Set the title for the fragment.
-            final ActionBar actionBar = this.getSupportActionBar();
-            if (actionBar != null) {
-                actionBar.setTitle(getString(R.string.app_name));
-            }
-            return;
-        }
-        super.onBackPressed();
-    }
-
-    private void syncUserSettings() {
-        // sync only if user is signed in
-        if (AWSMobileClient.defaultMobileClient().getIdentityManager().isUserSignedIn()) {
-            final UserSettings userSettings = UserSettings.getInstance();
-            userSettings.getDataset().synchronize(new DefaultSyncCallback() {
-                @Override
-                public void onSuccess(final Dataset dataset, final List<Record> updatedRecords) {
-                    super.onSuccess(dataset, updatedRecords);
-                    Log.d(LOG_TAG, "successfully synced user settings");
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            updateColor();
-                        }
-                    });
-                }
-            });
-        }
-    }
-
-    public void updateColor() {
-        final UserSettings userSettings = UserSettings.getInstance();
-        new AsyncTask<Void, Void, Void>() {
-            @Override
-            protected Void doInBackground(final Void... params) {
-                userSettings.loadFromDataset();
-                return null;
-            }
-
-            @Override
-            protected void onPostExecute(final Void aVoid) {
-                toolbar.setTitleTextColor(userSettings.getTitleTextColor());
-                toolbar.setBackgroundColor(userSettings.getTitleBarColor());
-                final Fragment fragment = getSupportFragmentManager().findFragmentById(R.id.main_fragment_container);
-                if (fragment != null) {
-                    final View fragmentView = fragment.getView();
-                    if (fragmentView != null) {
-                        fragmentView.setBackgroundColor(userSettings.getBackgroudColor());
-                    }
-                }
-            }
-        }.execute();
-    }
 }

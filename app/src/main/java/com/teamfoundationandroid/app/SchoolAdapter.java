@@ -15,88 +15,46 @@ import java.util.List;
  * Created by Ravi on 2/28/16.
  */
 public class SchoolAdapter extends ArrayAdapter<School> {
-    private final String MY_DEBUG_TAG = "CustomerAdapter";
-    private ArrayList<School> items;
-    private ArrayList<School> suggestions;
-    private int viewResourceId;
+    final String TAG = "AutocompleteCustomArrayAdapter.java";
 
-    public SchoolAdapter(Context context, int viewResourceId, ArrayList<School> items) {
-        super(context, viewResourceId, items);
-        this.items = items;
-        this.itemsAll = (ArrayList<School>) items.clone();
-        this.suggestions = new ArrayList<School>();
-        this.viewResourceId = viewResourceId;
+    Context mContext;
+    int layoutResourceId;
+    School data[] = null;
+
+    public SchoolAdapter(Context mContext, int layoutResourceId, School[] data) {
+
+        super(mContext, layoutResourceId, data);
+
+        this.layoutResourceId = layoutResourceId;
+        this.mContext = mContext;
+        this.data = data;
     }
 
-    private LayoutInflater layoutInflater;
-    List<School> schools;
-
-    private LayoutInflater.Filter mFilter = new Filter() {
         @Override
-        public String convertResultToString(Object resultValue) {
-            return ((School)resultValue).getName();
-        }
-
-        @Override
-        protected Filter.FilterResults performFiltering(CharSequence constraint) {
-            FilterResults results = new FilterResults();
-
-            if (constraint != null) {
-                ArrayList<School> suggustedSchools = new ArrayList<School>();
-                for (School school : schools) {
-                    // Note: change the "contains" to "startsWith" if you only want starting matches
-                    if (school.getName().toLowerCase().contains(constraint.toString().toLowerCase())) {
-                        suggestions.add(school);
-                    }
-                }
-
-                results.values = suggestions;
-                results.count = suggestions.size();
-            }
-
-            return results;
-        }
-
-        @Override
-        protected void publishResults(CharSequence constraint, FilterResults results) {
-            clear();
-            if (results != null && results.count > 0) {
-                // we have filtered results
-                addAll((ArrayList<School>) results.values);
-            } else {
-                // no filter, add entire original list back in
-                addAll(schools);
-            }
-            notifyDataSetChanged();
-        }
-    };
-
-    public SchoolAdapter(Context context, int textViewResourceId, List<School> schools) {
-        super(context, textViewResourceId, schools);
-        // copy all the customers into a master list
-        mSchool = new ArrayList<School>(schools.size());
-        mSchools.addAll(schools);
-        layoutInflater = (LayoutInflater) getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-    }
-
-    @Override
     public View getView(int position, View convertView, ViewGroup parent) {
-        View view = convertView;
 
-        if (view == null) {
-            view = layoutInflater.inflate(R.layout.customerNameLabel, null);
+            /*
+             * The convertView argument is essentially a "ScrapView" as described is Lucas post
+             * http://lucasr.org/2012/04/05/performance-tips-for-androids-listview/
+             * It will have a non-null value when ListView is asking you recycle the row layout.
+             * So, when convertView is not null, you should simply update its contents instead of inflating a new row layout.*/
+
+    if(convertView==null){
+        // inflate the layout
+        LayoutInflater inflater = ((SelectSchoolActivity) mContext).getLayoutInflater();
+        convertView = inflater.inflate(layoutResourceId, parent, false);
+    }
+
+    // object item based on the position
+    School objectItem = data[position];
+
+    // get the TextView and then set the text (item name) and tag (item ID) values
+    TextView textViewItem = (TextView) convertView.findViewById(R.id.textViewItem);
+    textViewItem.setText(objectItem.friendlyName);
+
+
+        return convertView;
+
         }
 
-        School school = getItem(position);
-
-        TextView name = (TextView) view.findViewById(R.id.customerNameLabel);
-        name.setText(customer.getName());
-
-        return view;
-    }
-
-    @Override
-    public Filter getFilter() {
-        return mFilter;
-    }
 }

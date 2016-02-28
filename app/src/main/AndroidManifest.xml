@@ -131,6 +131,14 @@
             android:name=".SelectSchoolActivity"
             android:label="@string/title_activity_select_school" >
         </activity>
+        <activity
+            android:name=".CourseFindActivity"
+            android:label="@string/title_activity_course_find"
+            android:parentActivityName=".MainActivity" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.teamfoundationandroid.app.MainActivity" />
+        </activity>
     </application>
 
 </manifest>

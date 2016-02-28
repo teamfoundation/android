@@ -4,29 +4,25 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.AutoCompleteTextView;
-import android.widget.EditText;
 import com.loopj.android.http.AsyncHttpClient;
-import com.loopj.android.http.JsonHttpResponseHandler;
+import com.loopj.android.http.RequestParams;
 import com.loopj.android.http.TextHttpResponseHandler;
 import cz.msebera.android.httpclient.Header;
-
-import java.util.ArrayList;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
 
 public class SelectSchoolActivity extends AppCompatActivity {
-    /*
-      * Change to type CustomAutoCompleteView instead of AutoCompleteTextView
-      * since we are extending to customize the view and disable filter
-      * The same with the XML view, type will be CustomAutoCompleteView
-      */
-    SchoolAutoCompleteView myAutoComplete;
+    SchoolAutoCompleteView inputSchool;
 
     // adapter for auto-complete
-    ArrayAdapter<SchoolAdapter> myAdapter;
+    ArrayAdapter<School> myAdapter;
 
     public interface SchoolCallback {
         void processSchools(School[] schools);
@@ -34,7 +30,9 @@ public class SelectSchoolActivity extends AppCompatActivity {
 
     public void pullSchools(String hint, final SchoolCallback schoolCallback) {
         AsyncHttpClient client = new AsyncHttpClient();
-        client.post("", new TextHttpResponseHandler() {
+        RequestParams params = new RequestParams();
+        params.add("school_name",hint);
+        client.post("http://bncollege.com/partners-search/", params,new TextHttpResponseHandler() {
             @Override
             public void onFailure(int statusCode, Header[] headers, String responseString, Throwable throwable) {
 
@@ -42,11 +40,21 @@ public class SelectSchoolActivity extends AppCompatActivity {
 
             @Override
             public void onSuccess(int statusCode, Header[] headers, String responseString) {
-                //todo parse the responseString
-                School[] schools = new School[length];
-                //add the schools
-                schoolCallback.processSchools(schools);
+                if (responseString != null) {
 
+                    Document doc = Jsoup.parse(responseString);
+                    Elements schoolLinks = doc.select("a");
+                    School[] schools = new School[schoolLinks.size()];
+                    for (int i = 0; i < schoolLinks.size(); i++) {
+                        Element link = schoolLinks.get(i);
+                        String baseURl = link.attr("href");
+                        String name = link.ownText();
+                        schools[i] = new School(name,baseURl);
+
+                    }
+                    //add the schools
+                    schoolCallback.processSchools(schools);
+                }
             }
         });
     }
@@ -56,9 +64,15 @@ public class SelectSchoolActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.select_school_activity);
 
-        AutoCompleteTextView inputSchool = (SchoolAutoCompleteView) findViewById(R.id.select_school_fragment_input_school);
+        inputSchool = (SchoolAutoCompleteView) findViewById(R.id.select_school_fragment_input_school);
         inputSchool.setFocusableInTouchMode(true);
         inputSchool.requestFocus();
+        inputSchool.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                System.out.println("item clicked");
+            }
+        });
         inputSchool.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
@@ -67,21 +81,21 @@ public class SelectSchoolActivity extends AppCompatActivity {
 
             @Override
             public void onTextChanged(CharSequence userInput, int start, int before, int count) {
-                // if you want to see in the logcat what the user types
-                SelectSchoolActivity mainActivity = ((MainActivity) context);
-
                 // update the adapater
-                myAdapter.notifyDataSetChanged();
+                if (myAdapter != null) {
+                    myAdapter.notifyDataSetChanged();
+                }
 
                 // get suggestions from the database
                 pullSchools(userInput.toString(), new SchoolCallback() {
                     @Override
                     public void processSchools(School[] schools) {
-
+                        if (myAdapter != null) {
+                            myAdapter.notifyDataSetChanged();
+                        }
                         // update the adapter
-                        myAdapter = new SchoolAdapter(SelectSchoolActivity.this, R.layout.list_view_row_item, schools);
-
-                        myAutoComplete.setAdapter(myAdapter);
+                        myAdapter = new SchoolAdapter(SelectSchoolActivity.this, R.layout.select_school_fragment_list_view_row, schools);
+                        inputSchool.setAdapter(myAdapter);
                     }
                 });
 
@@ -93,36 +107,7 @@ public class SelectSchoolActivity extends AppCompatActivity {
             }
         });
 
-
-        ArrayList<School> schools = new ArrayList<>();
-        String[] items = new String[] {"Please search..."};
-
-
-
-        ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, items);
-        inputSchool.setAdapter(adapter);
-        inputSchool.on
     }
-
-    // this function is used in CustomAutoCompleteTextChangedListener.java
-    public String[] getItemsFromDb(String searchTerm){
-
-        // add items on the array dynamically
-        List<MyObject> products = databaseH.read(searchTerm);
-        int rowCount = products.size();
-
-        String[] item = new String[rowCount];
-        int x = 0;
-
-        for (MyObject record : products) {
-
-            item[x] = record.objectName;
-            x++;
-        }
-
-        return item;
-    }
-
 
 
     @Override

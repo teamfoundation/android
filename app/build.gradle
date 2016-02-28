@@ -18,7 +18,7 @@ android {
 
     defaultConfig {
         applicationId "com.teamfoundationandroid.app"
-        minSdkVersion 16
+        minSdkVersion 21
         targetSdkVersion 23
         versionCode 1
         versionName "1.0"
@@ -47,4 +47,5 @@ dependencies {
     compile 'com.google.android.gms:play-services-plus:8.4.0'
     compile 'com.android.support:multidex:1.0.1'
     compile 'com.loopj.android:android-async-http:1.4.9'
+    compile 'org.jsoup:jsoup:1.8.3'
 }
