@@ -10,7 +10,9 @@ package com.teamfoundationandroid.app;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.widget.Toast;
@@ -19,8 +21,8 @@ import com.amazonaws.mobile.user.signin.SignInManager;
 import com.amazonaws.mobile.user.signin.SignInProvider;
 import com.amazonaws.mobile.user.IdentityManager;
 import com.amazonaws.mobile.user.IdentityProvider;
-import com.teamfoundationandroid.app.MainActivity;
-import com.teamfoundationandroid.app.SignInActivity;
+import com.teamfoundationandroid.app.coursefind.CourseFindActivity;
+import com.teamfoundationandroid.app.schoolselect.SelectSchoolActivity;
 
 import java.util.concurrent.CountDownLatch;
 
@@ -166,7 +168,14 @@ public class SplashActivity extends Activity {
      */
     protected void goMain() {
         Log.d(LOG_TAG, "Launching Main Activity...");
-        goAfterSplashTimeout(new Intent(this, MainActivity.class));
+        //if Main Activity
+        SharedPreferences app_preferences = PreferenceManager.getDefaultSharedPreferences(this);
+        if (app_preferences.getString("schoolBaseURL","none").equals("none")) {
+            goAfterSplashTimeout(new Intent(this, SelectSchoolActivity.class));
+        }
+        else {
+            goAfterSplashTimeout(new Intent(this, CourseFindActivity.class));
+        }
     }
 
     /**

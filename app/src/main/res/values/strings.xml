@@ -141,4 +141,6 @@
     <string name="settings_fragment_dialog_message">Loading&#8230;</string>
     <string name="settings_fragment_prompt">Please choose a theme:</string>
     <string name="title_activity_book_list">Book List</string>
+    <string name="title_activity_select_school">Select School</string>
+    <string name="title_activity_course_find">Find Your Courses</string>
 </resources>
